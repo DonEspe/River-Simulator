@@ -11,6 +11,8 @@
 		FE938C7B2BED754F009FF943 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE938C7A2BED754F009FF943 /* ContentView.swift */; };
 		FE938C7D2BED7550009FF943 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE938C7C2BED7550009FF943 /* Assets.xcassets */; };
 		FE938C802BED7550009FF943 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE938C7F2BED7550009FF943 /* Preview Assets.xcassets */; };
+		FE938C872BED7568009FF943 /* CheckToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE938C862BED7568009FF943 /* CheckToggleStyle.swift */; };
+		FE938C892BEEB9C8009FF943 /* Particle.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE938C882BEEB9C8009FF943 /* Particle.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +21,8 @@
 		FE938C7A2BED754F009FF943 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		FE938C7C2BED7550009FF943 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FE938C7F2BED7550009FF943 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		FE938C862BED7568009FF943 /* CheckToggleStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckToggleStyle.swift; sourceTree = "<group>"; };
+		FE938C882BEEB9C8009FF943 /* Particle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Particle.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +57,8 @@
 			children = (
 				FE938C782BED754F009FF943 /* RiverSimulatorApp.swift */,
 				FE938C7A2BED754F009FF943 /* ContentView.swift */,
+				FE938C882BEEB9C8009FF943 /* Particle.swift */,
+				FE938C862BED7568009FF943 /* CheckToggleStyle.swift */,
 				FE938C7C2BED7550009FF943 /* Assets.xcassets */,
 				FE938C7E2BED7550009FF943 /* Preview Content */,
 			);
@@ -138,6 +144,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				FE938C7B2BED754F009FF943 /* ContentView.swift in Sources */,
+				FE938C892BEEB9C8009FF943 /* Particle.swift in Sources */,
+				FE938C872BED7568009FF943 /* CheckToggleStyle.swift in Sources */,
 				FE938C792BED754F009FF943 /* RiverSimulatorApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
