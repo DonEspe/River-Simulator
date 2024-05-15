@@ -13,7 +13,7 @@ let playSize = (width: actualSize.width / scale, height: actualSize.height / sca
 
 struct ContentView: View {
 
-    @State var map = Array(repeating: Array(repeating: Particle(type: .sand), count: Int(playSize.height)), count: Int(playSize.width))
+    @State var map = Array(repeating: Array(repeating: Particle(type: .none ), count: Int(playSize.height)), count: Int(playSize.width))
     @State var drawSize = 10.0
     @State var showActive = false
     //    @StateObject private var storm = Storm()
@@ -28,7 +28,6 @@ struct ContentView: View {
                 Text("River Simulator")
                     .bold()
                     .font(.title)
-                    .foregroundStyle(.white)
                     .padding()
                 ZStack {
                     Rectangle()
@@ -53,9 +52,17 @@ struct ContentView: View {
                 .frame(width: CGFloat(playSize.width * scale), height: CGFloat(playSize.height * scale))
                 .padding()
                 .scaledToFill()
+
+                Button("Reset") {
+                    map = Array(repeating: Array(repeating: Particle(type: .none, active: true), count: Int(playSize.height)), count: Int(playSize.width))
+                }
+                .buttonStyle(.borderedProminent)
+                .padding()
+
                 Spacer()
+
             }
-            .background(.black)
+//            .background(.black)
         }
     }
 }
