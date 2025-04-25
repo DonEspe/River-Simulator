@@ -24,29 +24,39 @@ struct Particle: Identifiable {
     var moved = false
     var active = true
     var hueCount = 0.0
+    var elevation = 0.0
 
     func color() -> Color {
+        let adjustedElevation = (elevation + 2) / 20
 
-        switch type {
-            case .sand:
-                return .yellow
-            case .rainbowSand:
-                return Color(hue: hueCount, saturation: 1, brightness: 1)
-            case .solid:
-                return .gray
-            case .water:
-                return .blue
-            case .snow:
-                return .white
-            case .steam:
-                return .gray.opacity(0.4)
-            case .ice:
-                return .teal
-            case .fire:
-                return .red
-            case .none:
-                return .clear
+        if elevation > 0 {
+
+            return Color(red: adjustedElevation , green: adjustedElevation, blue: adjustedElevation)
+        } else {
+            return Color(red: 0, green: 0, blue: 1)
         }
+
+
+//        switch type {
+//            case .sand:
+//                return .yellow
+//            case .rainbowSand:
+//                return Color(hue: hueCount, saturation: 1, brightness: 1)
+//            case .solid:
+//                return .gray
+//            case .water:
+//                return .blue
+//            case .snow:
+//                return .white
+//            case .steam:
+//                return .gray.opacity(0.4)
+//            case .ice:
+//                return .teal
+//            case .fire:
+//                return .red
+//            case .none:
+//                return .clear
+//        }
     }
 
 }
