@@ -9,7 +9,7 @@ import SwiftUI
 import Foundation
 
 let actualSize = (width: 350, height: 480)
-let scale = 3
+let scale = 4
 let playSize = (width: actualSize.width / scale, height: actualSize.height / scale)
 
 struct ContentView: View {
@@ -20,6 +20,8 @@ struct ContentView: View {
     @State var rain = true
     @State var changeElevation = false
     @State var lowerElevation = true
+
+    @State var totalWater = 0.0
 
     let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
     //    @StateObject private var storm = Storm()
@@ -37,7 +39,7 @@ struct ContentView: View {
                     .padding()
                 ZStack {
                     Rectangle()
-                        .stroke(lineWidth: 2)
+                        .stroke(lineWidth: 3)
                         .foregroundColor(.blue)
                     Canvas { context, size in
                         for y in 0..<(playSize.height) {
@@ -103,6 +105,7 @@ struct ContentView: View {
                 .frame(width: CGFloat(playSize.width * scale), height: CGFloat(playSize.height * scale))
                 .padding()
                 .scaledToFill()
+                Text("Total Water: \(Int(totalWater))")
 
                 HStack {
                     Text("Draw size (\(Int(drawSize))): ")
@@ -141,6 +144,13 @@ struct ContentView: View {
 //                    }
 //                    .toggleStyle()
                     Spacer()
+                }
+                Button("Dump water over entire map") {
+                    for i in 0..<playSize.width  {
+                        for j in 0..<playSize.height  {
+                            map[i][j].waterAmount += 0.05
+                        }
+                    }
                 }
 
                 Button("Reset") {
@@ -208,7 +218,12 @@ struct ContentView: View {
                         map[randomX][randomY].active = true
                     }
                 }
-
+                totalWater = 0.0
+                for i in 0..<playSize.width {
+                    for j in (0..<playSize.height) {
+                        totalWater += map[i][j].waterAmount
+                    }
+                }
                 for i in 0..<playSize.width {
                     for j in (0..<playSize.height) {
 //                        if map[i][j].active || nonMoving.contains(map[i][j].type)
@@ -309,7 +324,7 @@ struct ContentView: View {
                 if ((tempMap[location.x][location.y].waterAmount + tempMap[location.x][location.y].elevation) < (tempMap[position.x][position.y].elevation + tempMap[position.x][position.y].waterAmount)) && !location.offMap {
                     if tempMap[position.x][position.y].waterAmount > 0 {
                         let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount)
-                        tempMap[location.x][location.y].previousDirection = location.direction
+//                        tempMap[location.x][location.y].previousDirection = location.direction
                         tempMap[position.x][position.y].waterAmount -= moveAmount
                         tempMap[location.x][location.y].waterAmount += moveAmount
                         tempMap[location.x][location.y].elevation += (moveAmount / 4.0)
