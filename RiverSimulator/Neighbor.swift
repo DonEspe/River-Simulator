@@ -7,6 +7,15 @@
 
 import Foundation
 
+enum Direction: CaseIterable {
+
+    case up
+    case down
+    case left
+    case right
+}
+
+
 struct Neighbor: Identifiable {
     var id = UUID()
     var x: Int
@@ -14,5 +23,6 @@ struct Neighbor: Identifiable {
     var elevation: Double
     var waterLevel: Double
     var offMap: Bool = false
+    var direction: Direction?
     //    var type: ParticleType
 }

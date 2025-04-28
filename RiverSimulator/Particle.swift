@@ -5,12 +5,9 @@ import SwiftUI
 enum ParticleType: String, CaseIterable {
 
     case sand = "Sand"
-    case rainbowSand = "Rainbow Sand"
     case water = "Water"
     case snow = "Snow"
     case ice = "Ice"
-    case fire = "Fire"
-    case steam = "Steam"
     case solid = "Solid"
     case none = "Blank"
 }
@@ -25,11 +22,14 @@ struct Particle: Identifiable {
     var type: ParticleType
     var moved = false
     var active = true
-    var hueCount = 0.0
+//    var hueCount = 0.0
+    var previousDirection: Direction?
     var elevation: Double {
         didSet {
             if elevation < 0 {
-                self.waterAmount -= elevation
+                if self.waterAmount <= 0 {
+                    self.waterAmount -= elevation
+                }
                 self.elevation = 0
             }
             if elevation > highestElevation {

@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import Foundation
 
 let actualSize = (width: 350, height: 480)
-let scale = 5
+let scale = 3
 let playSize = (width: actualSize.width / scale, height: actualSize.height / scale)
 
 struct ContentView: View {
@@ -16,7 +17,9 @@ struct ContentView: View {
     @State var map = Array(repeating: Array(repeating: Particle(type: .sand, elevation: Double.random(in: -10...10)), count: Int(playSize.height)), count: Int(playSize.width))
     @State var drawSize = 10.0
     @State var showActive = false
-    @State var rainParticles = true
+    @State var rain = true
+    @State var changeElevation = false
+    @State var lowerElevation = true
 
     let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
     //    @StateObject private var storm = Storm()
@@ -45,7 +48,11 @@ struct ContentView: View {
 
                                 context.fill(
                                     Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
-                                    with: (map[x][y].waterAmount > 0.2 ? .color(.blue.opacity(0.4)) : .color(.clear)))
+                                    with: (map[x][y].waterAmount > 0 ? .color(.blue.opacity(( map[x][y].waterAmount / 3) + 0.2)) : .color(.clear)))
+
+//                                context.fill(
+//                                    Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
+//                                    with: (map[x][y].waterAmount > 1 ? .color(.blue.opacity(0.6)) : .color(.clear)))
 
                                 if showActive {
                                     context.fill(
@@ -55,10 +62,86 @@ struct ContentView: View {
                             }
                         }
                     }
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                let radius = Int(drawSize)
+                                let useLocation = (x: Int(value.location.x / CGFloat(scale)), y: Int(value.location.y / CGFloat(scale)))
+                                if useLocation.y < playSize.height - 1 && useLocation.x < playSize.width - 1 && useLocation.x >= 0 && useLocation.y >= 0 {
+                                    for i in (useLocation.x - radius - 2)...(useLocation.x + radius + 2) {
+                                        for j in (useLocation.y - radius - 2)...(useLocation.y + radius + 2) {
+                                            if ((i - useLocation.x) * (i - useLocation.x)) + ((j - useLocation.y) * (j - useLocation.y)) < radius * 2 {
+                                                if i >= 0 && i < playSize.width && j >= 0 && j < playSize.height && Int.random(in: 0...100) > 70 {
+                                                    if changeElevation {
+                                                        if lowerElevation {
+                                                            map[i][j].elevation -= 0.3
+                                                        } else {
+                                                            map[i][j].elevation += 0.3
+                                                        }
+                                                    } else {
+                                                        map[i][j].waterAmount += 0.1
+                                                    }
+                                                    map[i][j].active = true
+                                                    for x in (i - 1)...(i + 1) {
+                                                        for y in (j - 1)...(j + 1) {
+                                                            if x >= 0 && x < (playSize.width) && y >= 0 && y < (playSize.height) {
+                                                                map[x][y].active = true
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .onEnded { _ in
+                            }
+                    )
+
                 }
                 .frame(width: CGFloat(playSize.width * scale), height: CGFloat(playSize.height * scale))
                 .padding()
                 .scaledToFill()
+
+                HStack {
+                    Text("Draw size (\(Int(drawSize))): ")
+                    Slider(value: $drawSize, in: 1...50)
+                }
+                HStack(spacing: 10) {
+                    Toggle(isOn: $rain) {
+                        Text("Rain")
+                    }
+                    .toggleStyle(CheckToggleStyle())
+                    Spacer()
+                    Toggle(isOn: $paused) {
+                        Text("Pause")
+                    }
+                    .toggleStyle(CheckToggleStyle())
+                }
+
+                HStack() {
+                    Text("Touches: ")
+                    Button(action: {
+                        changeElevation.toggle()
+                    }) {
+                        Text(changeElevation ? "Destroy ground": "Rain")
+                    }
+
+                    if changeElevation {
+                        Spacer()
+                        Toggle(isOn: $lowerElevation) {
+                            Text("Lower Elevation")
+                        }
+                        .toggleStyle(CheckToggleStyle())
+
+                    }
+//                    Toggle(isOn: $removeElevation) {
+//                        Text(removeElevation ? "Destroy ground": "Rain")
+//                    }
+//                    .toggleStyle()
+                    Spacer()
+                }
 
                 Button("Reset") {
                     for i in 0..<playSize.width  {
@@ -110,24 +193,25 @@ struct ContentView: View {
                 Spacer()
             }
             //            .background(.black)
+
             .onReceive(timer, perform: { _ in
                 if paused {
                     return
                 }
 
-                if rainParticles {
-                    for _ in 0...5 {
+                if rain {
+                    for _ in 0...10 {
                         let randomX = Int.random(in: 0..<playSize.width)
                         let randomY = Int.random(in: 0..<playSize.height)
 
-                        map[randomX][randomY].waterAmount += 0.1
+                        map[randomX][randomY].waterAmount += 0.15
                         map[randomX][randomY].active = true
                     }
                 }
 
                 for i in 0..<playSize.width {
-                    for j in (0..<playSize.height)  { // .reversed() {
-//                        if map[i][j].active || nonMoving.contains(map[i][j].type) {
+                    for j in (0..<playSize.height) {
+//                        if map[i][j].active || nonMoving.contains(map[i][j].type)
                             map = moveParticle(particles: map, position: (x: i, y: j))
 //                        }
                     }
@@ -136,7 +220,7 @@ struct ContentView: View {
         }
     }
 
-    func calcNeighbor(position: (x: Int, y: Int), open: [ParticleType] = [.none]) -> Neighbor? {
+    func calcNeighbor(position: (x: Int, y: Int), direction: Direction?, open: [ParticleType] = [.none]) -> Neighbor? {
         if position.x < 0 || position.x >= playSize.width || position.y < 0 || position.y >= playSize.height {
             return Neighbor(x: 0, y: 0, elevation: 0, waterLevel: 0, offMap: true)
         }
@@ -145,7 +229,7 @@ struct ContentView: View {
             return nil
         }
 
-        return Neighbor(x: position.x, y: position.y, elevation: map[position.x][position.y].elevation, waterLevel: map[position.x][position.y].waterAmount)
+        return Neighbor(x: position.x, y: position.y, elevation: map[position.x][position.y].elevation, waterLevel: map[position.x][position.y].waterAmount, direction: direction)
     }
 
 
@@ -170,35 +254,25 @@ struct ContentView: View {
                 return tempMap
 
             case .sand:
-                if let right = calcNeighbor(position: (x: position.x + 1, y: position.y), open: [.sand, .water, .snow]) {
+                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1),direction: .down, open: [.sand, .water, .snow]) {
+                    neighbors.append(down)
+                }
+                if let up = calcNeighbor(position: (x: position.x, y: position.y - 1), direction: .up, open: [.sand, .water, .snow]) {
+                    neighbors.append(up)
+                }
+                if let right = calcNeighbor(position: (x: position.x + 1, y: position.y), direction: .right, open: [.sand, .water, .snow]) {
                     neighbors.append(right)
                 }
 
-                if let left = calcNeighbor(position: (x: position.x - 1, y: position.y), open: [.sand, .water, .snow]) {
+                if let left = calcNeighbor(position: (x: position.x - 1, y: position.y), direction: .left, open: [.sand, .water, .snow]) {
                     neighbors.append(left)
                 }
-
-                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), open: [.sand, .water, .snow]) {
-                    neighbors.append(down)
-                }
-
-                if let up = calcNeighbor(position: (x: position.x, y: position.y - 1), open: [.sand, .water, .snow]) {
-                    neighbors.append(up)
-                }
-
-
-            case .rainbowSand:
-                print("rainbow")
             case .water:
                 print("water")
             case .snow:
                 print("snow")
             case .ice:
                 print("ice")
-            case .fire:
-                print("fire")
-            case .steam:
-                print("steam")
         }
 
         if !neighbors.isEmpty {
@@ -223,19 +297,32 @@ struct ContentView: View {
 //                }
 //            }
 
-            for location in neighbors {
-                if location.offMap && tempMap[position.x][position.y].waterAmount > 0 {
-                    tempMap[position.x][position.y].waterAmount -= 0.1
-//                    print("moved offmap... new level = ", tempMap[position.x][position.y].waterAmount)
-                }
+            neighbors.shuffle()
+//            if let inertialLocation = neighbors.first(where: {$0.direction == particle.previousDirection}) {
+//                if particle.previousDirection != .up || Int.random(in: 0...100) > 90 {
+//                    neighbors.removeAll(where: { $0.id == inertialLocation.id })
+//                    neighbors.insert(inertialLocation, at: 0)
+//                }
+//            }
 
+            for location in neighbors {
                 if ((tempMap[location.x][location.y].waterAmount + tempMap[location.x][location.y].elevation) < (tempMap[position.x][position.y].elevation + tempMap[position.x][position.y].waterAmount)) && !location.offMap {
                     if tempMap[position.x][position.y].waterAmount > 0 {
-                        tempMap[position.x][position.y].waterAmount -= 0.2
-                        tempMap[location.x][location.y].waterAmount += 0.2
-                        tempMap[location.x][location.y].elevation += 0.175
-                        tempMap[position.x][position.y].elevation -= 0.175
+                        let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount)
+                        tempMap[location.x][location.y].previousDirection = location.direction
+                        tempMap[position.x][position.y].waterAmount -= moveAmount
+                        tempMap[location.x][location.y].waterAmount += moveAmount
+                        tempMap[location.x][location.y].elevation += (moveAmount / 4.0)
+                        tempMap[position.x][position.y].elevation -= (moveAmount / 4.0)
                     }
+                }
+
+                if location.offMap && tempMap[position.x][position.y].waterAmount > 0.1 {
+                    let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount)
+                    tempMap[position.x][position.y].waterAmount -= moveAmount
+                    tempMap[position.x][position.y].elevation -= (moveAmount / 4.0)
+
+                    //                    print("moved offmap... new level = ", tempMap[position.x][position.y].waterAmount)
                 }
             }
         }
