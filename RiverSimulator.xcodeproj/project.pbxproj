@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FE551E7A2DBDB08800A7DB26 /* Neighbor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE551E792DBDB08300A7DB26 /* Neighbor.swift */; };
 		FE938C792BED754F009FF943 /* RiverSimulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE938C782BED754F009FF943 /* RiverSimulatorApp.swift */; };
 		FE938C7B2BED754F009FF943 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE938C7A2BED754F009FF943 /* ContentView.swift */; };
 		FE938C7D2BED7550009FF943 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE938C7C2BED7550009FF943 /* Assets.xcassets */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		FE551E792DBDB08300A7DB26 /* Neighbor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Neighbor.swift; sourceTree = "<group>"; };
 		FE938C752BED754F009FF943 /* RiverSimulator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RiverSimulator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE938C782BED754F009FF943 /* RiverSimulatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiverSimulatorApp.swift; sourceTree = "<group>"; };
 		FE938C7A2BED754F009FF943 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -57,6 +59,7 @@
 			children = (
 				FE938C782BED754F009FF943 /* RiverSimulatorApp.swift */,
 				FE938C7A2BED754F009FF943 /* ContentView.swift */,
+				FE551E792DBDB08300A7DB26 /* Neighbor.swift */,
 				FE938C882BEEB9C8009FF943 /* Particle.swift */,
 				FE938C862BED7568009FF943 /* CheckToggleStyle.swift */,
 				FE938C7C2BED7550009FF943 /* Assets.xcassets */,
@@ -145,6 +148,7 @@
 			files = (
 				FE938C7B2BED754F009FF943 /* ContentView.swift in Sources */,
 				FE938C892BEEB9C8009FF943 /* Particle.swift in Sources */,
+				FE551E7A2DBDB08800A7DB26 /* Neighbor.swift in Sources */,
 				FE938C872BED7568009FF943 /* CheckToggleStyle.swift in Sources */,
 				FE938C792BED754F009FF943 /* RiverSimulatorApp.swift in Sources */,
 			);

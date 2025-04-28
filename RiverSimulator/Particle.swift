@@ -15,6 +15,8 @@ enum ParticleType: String, CaseIterable {
     case none = "Blank"
 }
 
+let highestElevation = 20.0
+
 let nonMoving:[ParticleType] = [.none, .solid]
 
 struct Particle: Identifiable {
@@ -24,39 +26,37 @@ struct Particle: Identifiable {
     var moved = false
     var active = true
     var hueCount = 0.0
-    var elevation = 0.0
-
-    func color() -> Color {
-        let adjustedElevation = (elevation + 2) / 20
-
-        if elevation > 0 {
-
-            return Color(red: adjustedElevation , green: adjustedElevation, blue: adjustedElevation)
-        } else {
-            return Color(red: 0, green: 0, blue: 1)
+    var elevation: Double {
+        didSet {
+            if elevation < 0 {
+                self.waterAmount -= elevation
+                self.elevation = 0
+            }
+            if elevation > highestElevation {
+                self.elevation = highestElevation
+            }
         }
-
-
-//        switch type {
-//            case .sand:
-//                return .yellow
-//            case .rainbowSand:
-//                return Color(hue: hueCount, saturation: 1, brightness: 1)
-//            case .solid:
-//                return .gray
-//            case .water:
-//                return .blue
-//            case .snow:
-//                return .white
-//            case .steam:
-//                return .gray.opacity(0.4)
-//            case .ice:
-//                return .teal
-//            case .fire:
-//                return .red
-//            case .none:
-//                return .clear
+    }
+    
+    var waterAmount = 0.0 {
+        didSet {
+            if waterAmount < 0 {
+                waterAmount = 0
+            }
+        }
+    }
+    
+    func color() -> Color {
+        let adjustedElevation = (elevation) / highestElevation
+//        if waterAmount < 0.5 && elevation < 0.5 {
+//            return Color(red: 0, green: 1, blue: 1)
+//        }
+        
+//        if waterAmount <= 0.2 {  // 0.3 {
+            return Color(red: adjustedElevation , green: adjustedElevation, blue: adjustedElevation)
+//        } else {
+//            print("waterLevel: \(waterAmount)")
+//            return Color(red: 0, green: 0, blue: (waterAmount / 4) + 0.3) // showing elevation of 1... possibly move water into these areas...
 //        }
     }
-
 }
