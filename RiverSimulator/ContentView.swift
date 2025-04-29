@@ -49,6 +49,7 @@ struct ContentView: View {
                                 context.fill(
                                     Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
                                     with: (.color(map[x][y].color())))
+                                
                                 if showWater {
                                     context.fill(
                                         Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
@@ -172,6 +173,9 @@ struct ContentView: View {
                     for i in 0..<playSize.width  {
                         for j in 0..<playSize.height  {
                             map[i][j] = Particle(type: .sand, elevation: Double.random(in: -6...15))
+                            if Int.random(in: 0...100) > 90 {
+                                map[i][j].type = .rock
+                            }
                         }
                     }
 
@@ -237,15 +241,20 @@ struct ContentView: View {
                 for i in 0..<playSize.width {
                     for j in (0..<playSize.height) {
                         totalWater += map[i][j].waterAmount
+                        map[i][j].moved = false
                     }
                 }
+//                var tempMap = map
                 for i in 0..<playSize.width {
-                    for j in (0..<playSize.height) {
+                    for j in (0..<playSize.height).reversed() {
 //                        if map[i][j].active || nonMoving.contains(map[i][j].type)
-                            map = moveParticle(particles: map, position: (x: i, y: j))
+//                            tempMap = moveParticle(particles: tempMap, position: (x: i, y: j))
+                        map = moveParticle(particles: map, position: (x: i, y: j))
+
 //                        }
                     }
                 }
+//                map = tempMap
             })
         }
     }
@@ -265,9 +274,9 @@ struct ContentView: View {
 
     func moveParticle(particles: [[Particle]], position: (x: Int, y: Int)) -> [[Particle]] {
 
-        let particle = map[position.x][position.y]
+        let particle = particles[position.x][position.y]
 
-        if !particle.active {
+        if !particle.active || particle.moved {
             return particles
         }
 
@@ -283,26 +292,20 @@ struct ContentView: View {
             case .solid, .none:
                 return tempMap
 
-            case .sand:
-                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1),direction: .down, open: [.sand, .water, .snow]) {
+            case .sand, .rock:
+                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1),direction: .down, open: [.sand, .rock]) {
                     neighbors.append(down)
                 }
-                if let up = calcNeighbor(position: (x: position.x, y: position.y - 1), direction: .up, open: [.sand, .water, .snow]) {
+                if let up = calcNeighbor(position: (x: position.x, y: position.y - 1), direction: .up, open: [.sand, .rock]) {
                     neighbors.append(up)
                 }
-                if let right = calcNeighbor(position: (x: position.x + 1, y: position.y), direction: .right, open: [.sand, .water, .snow]) {
+                if let right = calcNeighbor(position: (x: position.x + 1, y: position.y), direction: .right, open: [.sand, .rock]) {
                     neighbors.append(right)
                 }
 
-                if let left = calcNeighbor(position: (x: position.x - 1, y: position.y), direction: .left, open: [.sand, .water, .snow]) {
+                if let left = calcNeighbor(position: (x: position.x - 1, y: position.y), direction: .left, open: [.sand, .rock]) {
                     neighbors.append(left)
                 }
-            case .water:
-                print("water")
-            case .snow:
-                print("snow")
-            case .ice:
-                print("ice")
         }
 
         if !neighbors.isEmpty {
@@ -328,33 +331,65 @@ struct ContentView: View {
 //            }
 
             neighbors.shuffle()
-//            if let inertialLocation = neighbors.first(where: {$0.direction == particle.previousDirection}) {
-//                if particle.previousDirection != .up || Int.random(in: 0...100) > 90 {
+            if let inertialLocation = neighbors.first(where: {$0.direction == particle.previousDirection}) {
+
+//                if (particle.previousDirection == .down || particle.previousDirection == .left)  { //&& Int.random(in: 0...100) > 70 {
+//                    neighbors.removeAll(where: { $0.id == inertialLocation.id })
+//                }
+//
+//                if (particle.previousDirection == .down || particle.previousDirection == .left)  { //&& Int.random(in: 0...100) > 70 {
+//                    neighbors.removeAll(where: { $0.id == inertialLocation.id })
+//                }
+//
+//                if particle.previousDirection != .up || Int.random(in: 0...100) > 70 || particle.previousDirection != .left {
 //                    neighbors.removeAll(where: { $0.id == inertialLocation.id })
 //                    neighbors.insert(inertialLocation, at: 0)
 //                }
-//            }
+
+                neighbors.removeAll(where: { $0.id == inertialLocation.id })
+                neighbors.insert(inertialLocation, at: 0)
+            }
+
+            var erosionAdjust = 10.0
+
+            switch particle.type {
+                case .sand:
+                    erosionAdjust = 2.0
+                case .rock:
+                    erosionAdjust = 10.0
+                case .solid, .none:
+                    erosionAdjust = 10000
+            }
 
             for location in neighbors {
-                if ((tempMap[location.x][location.y].waterAmount + tempMap[location.x][location.y].elevation) < (tempMap[position.x][position.y].elevation + tempMap[position.x][position.y].waterAmount)) && !location.offMap {
+                //                if (location.direction != .down && location.direction != .left) || Int.random(in: 0...100) > 25 {
+                let endElevation = (tempMap[location.x][location.y].waterAmount + tempMap[location.x][location.y].elevation)
+                let startElevation = (tempMap[position.x][position.y].elevation + tempMap[position.x][position.y].waterAmount)
+                let difference = endElevation - startElevation
+                if difference < 0 && !location.offMap {
                     if tempMap[position.x][position.y].waterAmount > 0 {
-                        let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount)
-//                        tempMap[location.x][location.y].previousDirection = location.direction
+                        let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount, abs(difference))
+                        tempMap[location.x][location.y].previousDirection = location.direction
                         tempMap[position.x][position.y].waterAmount -= moveAmount
                         tempMap[location.x][location.y].waterAmount += moveAmount
-                        tempMap[location.x][location.y].elevation += (moveAmount / 4.0)
-                        tempMap[position.x][position.y].elevation -= (moveAmount / 4.0)
+                        tempMap[location.x][location.y].elevation += (moveAmount / erosionAdjust)
+                        tempMap[position.x][position.y].elevation -= (moveAmount / erosionAdjust)
+
+                        tempMap[location.x][location.y].moved = true
                     }
                 }
 
-                if location.offMap && tempMap[position.x][position.y].waterAmount > 0.1 {
+
+                if location.offMap && tempMap[position.x][position.y].waterAmount > 0 {
                     let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount)
+                    tempMap[position.x][position.y].previousDirection = location.direction
                     tempMap[position.x][position.y].waterAmount -= moveAmount
-                    tempMap[position.x][position.y].elevation -= (moveAmount / 4.0)
+                    tempMap[position.x][position.y].elevation -= (moveAmount / erosionAdjust)
 
                     //                    print("moved offmap... new level = ", tempMap[position.x][position.y].waterAmount)
                 }
             }
+            //            }
         }
 
 

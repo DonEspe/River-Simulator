@@ -5,9 +5,10 @@ import SwiftUI
 enum ParticleType: String, CaseIterable {
 
     case sand = "Sand"
-    case water = "Water"
-    case snow = "Snow"
-    case ice = "Ice"
+//    case water = "Water"
+    case rock = "Rock"
+//    case snow = "Snow"
+//    case ice = "Ice"
     case solid = "Solid"
     case none = "Blank"
 }
@@ -45,18 +46,14 @@ struct Particle: Identifiable {
             }
         }
     }
-    
+
     func color() -> Color {
         let adjustedElevation = (elevation) / highestElevation
-//        if waterAmount < 0.5 && elevation < 0.5 {
-//            return Color(red: 0, green: 1, blue: 1)
-//        }
-        
-//        if waterAmount <= 0.2 {  // 0.3 {
-            return Color(red: adjustedElevation , green: adjustedElevation, blue: adjustedElevation)
-//        } else {
-//            print("waterLevel: \(waterAmount)")
-//            return Color(red: 0, green: 0, blue: (waterAmount / 4) + 0.3) // showing elevation of 1... possibly move water into these areas...
-//        }
+
+        if type == .rock {
+            return Color(red: adjustedElevation * 2 , green: adjustedElevation /*/ 2.0*/ , blue: 0) // should be a brown...
+        }
+        return Color(red: adjustedElevation , green: adjustedElevation, blue: adjustedElevation)
+
     }
 }
