@@ -16,6 +16,7 @@ struct ContentView: View {
 
     @State var map = Array(repeating: Array(repeating: Particle(type: .sand, elevation: Double.random(in: -10...10)), count: Int(playSize.height)), count: Int(playSize.width))
     @State var drawSize = 10.0
+    @State var sprayLevel = 70.0
     @State var showActive = false
     @State var rain = true
     @State var changeElevation = false
@@ -73,7 +74,7 @@ struct ContentView: View {
                                     for i in (useLocation.x - radius - 2)...(useLocation.x + radius + 2) {
                                         for j in (useLocation.y - radius - 2)...(useLocation.y + radius + 2) {
                                             if ((i - useLocation.x) * (i - useLocation.x)) + ((j - useLocation.y) * (j - useLocation.y)) < radius * 2 {
-                                                if i >= 0 && i < playSize.width && j >= 0 && j < playSize.height && Int.random(in: 0...100) > 70 {
+                                                if i >= 0 && i < playSize.width && j >= 0 && j < playSize.height && Double.random(in: 0...100) <= sprayLevel {
                                                     if changeElevation {
                                                         if lowerElevation {
                                                             map[i][j].elevation -= 0.3
@@ -110,6 +111,10 @@ struct ContentView: View {
                 HStack {
                     Text("Draw size (\(Int(drawSize))): ")
                     Slider(value: $drawSize, in: 1...50)
+                }
+                HStack {
+                    Text("Spray Level (\(Int(sprayLevel))): ")
+                    Slider(value: $sprayLevel, in: 0...100)
                 }
                 HStack(spacing: 10) {
                     Toggle(isOn: $rain) {
