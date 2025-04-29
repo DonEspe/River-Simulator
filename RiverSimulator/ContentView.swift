@@ -8,7 +8,7 @@
 import SwiftUI
 import Foundation
 
-let actualSize = (width: 350, height: 480)
+let actualSize = (width: 350, height: 460)
 let scale = 4
 let playSize = (width: actualSize.width / scale, height: actualSize.height / scale)
 
@@ -19,6 +19,7 @@ struct ContentView: View {
     @State var sprayLevel = 70.0
     @State var showActive = false
     @State var rain = true
+    @State var showWater = true
     @State var changeElevation = false
     @State var lowerElevation = true
 
@@ -37,7 +38,7 @@ struct ContentView: View {
                 Text("River Simulator")
                     .bold()
                     .font(.title)
-                    .padding()
+                    .padding(.top)
                 ZStack {
                     Rectangle()
                         .stroke(lineWidth: 3)
@@ -48,10 +49,11 @@ struct ContentView: View {
                                 context.fill(
                                     Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
                                     with: (.color(map[x][y].color())))
-
-                                context.fill(
-                                    Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
-                                    with: (map[x][y].waterAmount > 0 ? .color(.blue.opacity(( map[x][y].waterAmount / 3) + 0.2)) : .color(.clear)))
+                                if showWater {
+                                    context.fill(
+                                        Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
+                                        with: (map[x][y].waterAmount > 0 ? .color(.blue.opacity(( map[x][y].waterAmount / 3) + 0.2)) : .color(.clear)))
+                                }
 
 //                                context.fill(
 //                                    Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
@@ -106,12 +108,20 @@ struct ContentView: View {
                 .frame(width: CGFloat(playSize.width * scale), height: CGFloat(playSize.height * scale))
                 .padding()
                 .scaledToFill()
-                Text("Total Water: \(Int(totalWater))")
+                HStack {
+                    Text("Total Water: \(Int(totalWater))")
+                    Spacer()
+                    Toggle(isOn: $showWater) {
+                        Text("Hide Water")
+                    }
+                    .toggleStyle(CheckToggleStyle())
+                }
 
                 HStack {
                     Text("Draw size (\(Int(drawSize))): ")
                     Slider(value: $drawSize, in: 1...50)
                 }
+
                 HStack {
                     Text("Spray Level (\(Int(sprayLevel))): ")
                     Slider(value: $sprayLevel, in: 0...100)
