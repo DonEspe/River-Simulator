@@ -13,7 +13,7 @@ enum ParticleType: String, CaseIterable {
     case none = "Blank"
 }
 
-let highestElevation = 20.0
+let highestElevation = 10.0 //20.0
 
 let nonMoving:[ParticleType] = [.none, .solid]
 
@@ -47,12 +47,19 @@ struct Particle: Identifiable {
         }
     }
 
+    func adjustedColor() -> Color {
+        let adjustedElevation = (elevation + waterAmount) / highestElevation
+
+        return Color(red: adjustedElevation , green: adjustedElevation, blue: adjustedElevation)
+
+    }
+
     func color() -> Color {
         let adjustedElevation = (elevation) / highestElevation
 
-        if type == .rock {
-            return Color(red: adjustedElevation * 2 , green: adjustedElevation /*/ 2.0*/ , blue: 0) // should be a brown...
-        }
+//        if type == .rock {
+//            return Color(red: adjustedElevation * 2 , green: adjustedElevation /*/ 2.0*/ , blue: 0) // should be a brown...
+//        }
         return Color(red: adjustedElevation , green: adjustedElevation, blue: adjustedElevation)
 
     }

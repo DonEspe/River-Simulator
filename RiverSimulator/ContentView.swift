@@ -22,6 +22,7 @@ struct ContentView: View {
     @State var showWater = true
     @State var changeElevation = false
     @State var lowerElevation = true
+    @State var showElevation = false
 
     @State var totalWater = 0.0
 
@@ -46,19 +47,27 @@ struct ContentView: View {
                     Canvas { context, size in
                         for y in 0..<(playSize.height) {
                             for x in 0..<(playSize.width) {
-                                context.fill(
-                                    Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
-                                    with: (.color(map[x][y].color())))
-                                
+                                if !showElevation {
+                                    context.fill(
+                                        Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
+                                        with: (.color(map[x][y].color())))
+
+                                    if map[x][y].type == .rock {
+                                        context.fill(
+                                            Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
+                                            with: .color(Color(red: 0.5 , green: 0.25 , blue: 0).opacity(0.3)))
+                                    }
+                                } else {
+                                    context.fill(
+                                        Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
+                                        with: (.color(map[x][y].adjustedColor())))
+                                }
+
                                 if showWater {
                                     context.fill(
                                         Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
                                         with: (map[x][y].waterAmount > 0 ? .color(.blue.opacity(( map[x][y].waterAmount / 3) + 0.2)) : .color(.clear)))
                                 }
-
-//                                context.fill(
-//                                    Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
-//                                    with: (map[x][y].waterAmount > 1 ? .color(.blue.opacity(0.6)) : .color(.clear)))
 
                                 if showActive {
                                     context.fill(
@@ -132,6 +141,14 @@ struct ContentView: View {
                         Text("Rain")
                     }
                     .toggleStyle(CheckToggleStyle())
+
+                    Spacer()
+
+                    Toggle(isOn: $showElevation) {
+                        Text("show elevation")
+                    }
+                    .toggleStyle(CheckToggleStyle())
+
                     Spacer()
                     Toggle(isOn: $paused) {
                         Text("Pause")
@@ -184,29 +201,55 @@ struct ContentView: View {
 //                    for i in stride(from: 0, through:playSize.width - 3, by: 1)  {
 //                        for j in stride(from: 0, through:playSize.height - 3, by: 1)  {
 
-                    for i in 0...playSize.width - 3 {
-                        for j in 0...playSize.height - 3 {
+                    for i in 0...playSize.width - 1 {
+                        for j in 0...playSize.height - 1 {
+                            var tempTotal: Double = 0.0
+                            var count = 0
 
-                            let upperLeft = map[i][j].elevation
-                            let upperCenter = map[i+1][j].elevation
-                            let upperRight = map[i+2][j].elevation
-                            let Left = map[i][j+1].elevation
-                            let Center = map[i+1][j+1].elevation
-                            let Right = map[i+2][j+1].elevation
-                            let lowerLeft = map[i][j+2].elevation
-                            let lowerCenter = map[i+1][j+2].elevation
-                            let lowerRight = map[i+2][j+2].elevation
+                            for x in -1...1 {
+                                for y in -1...1 {
+                                    if i + x < playSize.width {
+                                        if let elevation = getElevation(map: map, position: (x: i + x, y: j + y)) {
+                                            count += 1
+                                            tempTotal += elevation
+                                        }
+                                    }
+                                }
+                            }
 
-                            let average = (upperLeft + upperCenter + upperRight + Left + Center + Right + lowerLeft + lowerCenter + lowerRight) / 9.0
-                            map[i][j].elevation = (average + map[i][j].elevation)  / 2
-                            map[i+1][j].elevation = (average + map[i+1][j].elevation)  / 2
-                            map[i+2][j].elevation = (average + map[i+2][j].elevation)  / 2
-                            map[i][j+1].elevation = (average + map[i][j+1].elevation)  / 2
-                            map[i+1][j+1].elevation = (average + map[i+1][j+1].elevation)  / 2
-                            map[i+2][j+1].elevation = (average + map[i+2][j+1].elevation)  / 2
-                            map[i][j+2].elevation = (average + map[i][j+2].elevation)  / 2
-                            map[i+1][j+2].elevation = (average + map[i+1][j+2].elevation)  / 2
-                            map[i+2][j+2].elevation = (average + map[i+2][j+2].elevation)  / 2
+                            let average = tempTotal / Double(count)
+
+                            for x in -1...1 {
+                                for y in -1...1 {
+                                    if i + x < playSize.width {
+                                        if let elevation = getElevation(map: map, position: (x: i + x, y: j + y)) {
+                                            map[i + x][j + y].elevation = (elevation + average) / 2
+                                        }
+                                    }
+                                }
+                            }
+
+
+//                            let upperRight = map[i+2][j].elevation
+//                            let upperLeft = map[i][j].elevation
+//                            let upperCenter = map[i+1][j].elevation
+//                            let Left = map[i][j+1].elevation
+//                            let Center = map[i+1][j+1].elevation
+//                            let Right = map[i+2][j+1].elevation
+//                            let lowerRight = map[i+2][j+2].elevation
+//                            let lowerLeft = map[i][j+2].elevation
+//                            let lowerCenter = map[i+1][j+2].elevation
+//
+//                            let average = (upperLeft + upperCenter + upperRight + Left + Center + Right + lowerLeft + lowerCenter + lowerRight) / 9.0
+//                            map[i][j].elevation = (average + map[i][j].elevation)  / 2
+//                            map[i+1][j].elevation = (average + map[i+1][j].elevation)  / 2
+//                            map[i+2][j].elevation = (average + map[i+2][j].elevation)  / 2
+//                            map[i][j+1].elevation = (average + map[i][j+1].elevation)  / 2
+//                            map[i+1][j+1].elevation = (average + map[i+1][j+1].elevation)  / 2
+//                            map[i+2][j+1].elevation = (average + map[i+2][j+1].elevation)  / 2
+//                            map[i][j+2].elevation = (average + map[i][j+2].elevation)  / 2
+//                            map[i+1][j+2].elevation = (average + map[i+1][j+2].elevation)  / 2
+//                            map[i+2][j+2].elevation = (average + map[i+2][j+2].elevation)  / 2
                         }
                     }
 
@@ -241,6 +284,9 @@ struct ContentView: View {
                 for i in 0..<playSize.width {
                     for j in (0..<playSize.height) {
                         totalWater += map[i][j].waterAmount
+                        if !map[i][j].moved {
+                            map[i][j].previousDirection = nil
+                        }
                         map[i][j].moved = false
                     }
                 }
@@ -257,6 +303,14 @@ struct ContentView: View {
 //                map = tempMap
             })
         }
+    }
+
+    func getElevation(map: [[Particle]], position: (x: Int, y: Int)) -> Double? {
+        if position.x >= 0 && position.x < playSize.width && position.y >= 0 && position.y < playSize.height {
+            return map[position.x][position.y].elevation
+        }
+
+        return nil
     }
 
     func calcNeighbor(position: (x: Int, y: Int), direction: Direction?, open: [ParticleType] = [.none]) -> Neighbor? {
@@ -370,6 +424,7 @@ struct ContentView: View {
                     if tempMap[position.x][position.y].waterAmount > 0 {
                         let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount, abs(difference))
                         tempMap[location.x][location.y].previousDirection = location.direction
+                        tempMap[position.x][position.y].previousDirection = location.direction
                         tempMap[position.x][position.y].waterAmount -= moveAmount
                         tempMap[location.x][location.y].waterAmount += moveAmount
                         tempMap[location.x][location.y].elevation += (moveAmount / erosionAdjust)
@@ -378,7 +433,6 @@ struct ContentView: View {
                         tempMap[location.x][location.y].moved = true
                     }
                 }
-
 
                 if location.offMap && tempMap[position.x][position.y].waterAmount > 0 {
                     let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount)
