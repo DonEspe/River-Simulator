@@ -48,18 +48,23 @@ struct Particle: Identifiable {
     }
 
     func adjustedColor() -> Color {
+
+        if type == .solid {
+            return Color(.white)
+        }
+
         let adjustedElevation = (elevation + waterAmount) / highestElevation
 
         return Color(red: adjustedElevation , green: adjustedElevation, blue: adjustedElevation)
-
     }
 
     func color() -> Color {
+        if type == .solid {
+            return Color(.white)
+        }
+
         let adjustedElevation = (elevation) / highestElevation
 
-//        if type == .rock {
-//            return Color(red: adjustedElevation * 2 , green: adjustedElevation /*/ 2.0*/ , blue: 0) // should be a brown...
-//        }
         return Color(red: adjustedElevation , green: adjustedElevation, blue: adjustedElevation)
 
     }

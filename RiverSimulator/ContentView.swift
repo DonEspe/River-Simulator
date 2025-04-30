@@ -23,6 +23,7 @@ struct ContentView: View {
     @State var changeElevation = false
     @State var lowerElevation = true
     @State var showElevation = false
+    @State var drawType = ParticleType.sand
 
     @State var totalWater = 0.0
 
@@ -87,7 +88,19 @@ struct ContentView: View {
                                         for j in (useLocation.y - radius - 2)...(useLocation.y + radius + 2) {
                                             if ((i - useLocation.x) * (i - useLocation.x)) + ((j - useLocation.y) * (j - useLocation.y)) < radius * 2 {
                                                 if i >= 0 && i < playSize.width && j >= 0 && j < playSize.height && Double.random(in: 0...100) <= sprayLevel {
-                                                    if changeElevation {
+//                                                    if changeElevation {
+//                                                        map[i][j].type = drawType
+//                                                        if nonMoving.contains(drawType) {
+//                                                            map[i][j].waterAmount = 0
+//                                                        }
+//                                                    }
+                                                    if changeElevation {//} && drawType == .sand {
+                                                        map[i][j].type = drawType
+
+                                                        if nonMoving.contains(drawType) {
+                                                            map[i][j].waterAmount = 0
+                                                        }
+
                                                         if lowerElevation {
                                                             map[i][j].elevation -= 0.3
                                                         } else {
@@ -119,13 +132,19 @@ struct ContentView: View {
                 .padding()
                 .scaledToFill()
                 HStack {
-                    Text("Total Water: \(Int(totalWater))")
-                    Spacer()
-                    Toggle(isOn: $showWater) {
-                        Text("Hide Water")
+                    Toggle(isOn: $showElevation) {
+                        Text("Show elevation")
                     }
                     .toggleStyle(CheckToggleStyle())
+                    Spacer()
+                    Toggle(isOn: $showWater) {
+                        Text("Show Water")
+                    }
+                    .toggleStyle(CheckToggleStyle())
+                    Spacer()
+                    Text("Total Water: \(Int(totalWater))")
                 }
+                .font(.subheadline)
 
                 HStack {
                     Text("Draw size (\(Int(drawSize))): ")
@@ -143,12 +162,22 @@ struct ContentView: View {
                     .toggleStyle(CheckToggleStyle())
 
                     Spacer()
-
-                    Toggle(isOn: $showElevation) {
-                        Text("show elevation")
+                    HStack {
+                        Spacer()
+                        if changeElevation {
+                            Text("Draw type: ")
+                            Picker("Draw type", selection: $drawType) {
+                                ForEach(ParticleType.allCases, id: \.self) {
+                                    Text($0.rawValue)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .tint(Color.primary.blendMode(.difference))
+                            .background(.blue.opacity(0.6))
+                            .clipShape(.capsule)
+                            Spacer()
+                        }
                     }
-                    .toggleStyle(CheckToggleStyle())
-
                     Spacer()
                     Toggle(isOn: $paused) {
                         Text("Pause")
@@ -161,21 +190,27 @@ struct ContentView: View {
                     Button(action: {
                         changeElevation.toggle()
                     }) {
-                        Text(changeElevation ? "Destroy ground": "Rain")
+                        Text(changeElevation ? "Modify": "Rain")
                     }
 
                     if changeElevation {
                         Spacer()
-                        Toggle(isOn: $lowerElevation) {
-                            Text("Lower Elevation")
-                        }
-                        .toggleStyle(CheckToggleStyle())
 
+                        Button(action: {
+                            lowerElevation.toggle()
+                        }) {
+                            Text("\(lowerElevation ? "Lower":"Raise") Elevation")
+                        }
+                        //                        Toggle(isOn: $lowerElevation) {
+                        //                            Text("\(lowerElevation ? "Lower":"Raise") Elevation")
                     }
-//                    Toggle(isOn: $removeElevation) {
-//                        Text(removeElevation ? "Destroy ground": "Rain")
-//                    }
-//                    .toggleStyle()
+                    //                        .toggleStyle(CheckToggleStyle())
+
+                    //                    }
+                    //                    Toggle(isOn: $removeElevation) {
+                    //                        Text(removeElevation ? "Destroy ground": "Rain")
+                    //                    }
+                    //                    .toggleStyle()
                     Spacer()
                 }
                 Button("Dump water over entire map") {
@@ -275,9 +310,10 @@ struct ContentView: View {
                     for _ in 0...10 {
                         let randomX = Int.random(in: 0..<playSize.width)
                         let randomY = Int.random(in: 0..<playSize.height)
-
-                        map[randomX][randomY].waterAmount += 0.15
-                        map[randomX][randomY].active = true
+                        if !nonMoving.contains(map[randomX][randomY].type) {
+                            map[randomX][randomY].waterAmount += 0.15
+                            map[randomX][randomY].active = true
+                        }
                     }
                 }
                 totalWater = 0.0
@@ -325,7 +361,6 @@ struct ContentView: View {
         return Neighbor(x: position.x, y: position.y, elevation: map[position.x][position.y].elevation, waterLevel: map[position.x][position.y].waterAmount, direction: direction)
     }
 
-
     func moveParticle(particles: [[Particle]], position: (x: Int, y: Int)) -> [[Particle]] {
 
         let particle = particles[position.x][position.y]
@@ -336,7 +371,7 @@ struct ContentView: View {
 
         var tempMap = particles
 
-        if nonMoving.contains(particle.type) || !particle.active {
+        if  !particle.active { //}|| nonMoving.contains(particle.type) {
             tempMap[position.x][position.y].active = false
             return tempMap
         }
@@ -344,6 +379,7 @@ struct ContentView: View {
         var neighbors = [Neighbor]()
         switch particle.type {
             case .solid, .none:
+                tempMap[position.x][position.y].waterAmount = 0
                 return tempMap
 
             case .sand, .rock:
@@ -412,7 +448,7 @@ struct ContentView: View {
                 case .rock:
                     erosionAdjust = 10.0
                 case .solid, .none:
-                    erosionAdjust = 10000
+                    erosionAdjust = 100000
             }
 
             for location in neighbors {
@@ -420,28 +456,30 @@ struct ContentView: View {
                 let endElevation = (tempMap[location.x][location.y].waterAmount + tempMap[location.x][location.y].elevation)
                 let startElevation = (tempMap[position.x][position.y].elevation + tempMap[position.x][position.y].waterAmount)
                 let difference = endElevation - startElevation
-                if difference < 0 && !location.offMap {
+                if difference < 0 {//} || location.offMap { //}&& !location.offMap {
                     if tempMap[position.x][position.y].waterAmount > 0 {
                         let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount, abs(difference))
-                        tempMap[location.x][location.y].previousDirection = location.direction
                         tempMap[position.x][position.y].previousDirection = location.direction
                         tempMap[position.x][position.y].waterAmount -= moveAmount
-                        tempMap[location.x][location.y].waterAmount += moveAmount
-                        tempMap[location.x][location.y].elevation += (moveAmount / erosionAdjust)
                         tempMap[position.x][position.y].elevation -= (moveAmount / erosionAdjust)
 
+                        if !location.offMap  {
+                            tempMap[location.x][location.y].waterAmount += moveAmount
+                            tempMap[location.x][location.y].elevation += (moveAmount / erosionAdjust)
+                            tempMap[location.x][location.y].previousDirection = location.direction
+                        }
                         tempMap[location.x][location.y].moved = true
                     }
                 }
 
-                if location.offMap && tempMap[position.x][position.y].waterAmount > 0 {
-                    let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount)
-                    tempMap[position.x][position.y].previousDirection = location.direction
-                    tempMap[position.x][position.y].waterAmount -= moveAmount
-                    tempMap[position.x][position.y].elevation -= (moveAmount / erosionAdjust)
-
-                    //                    print("moved offmap... new level = ", tempMap[position.x][position.y].waterAmount)
-                }
+//                if location.offMap && tempMap[position.x][position.y].waterAmount > 0 {
+//                    let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount)
+//                    tempMap[position.x][position.y].previousDirection = location.direction
+//                    tempMap[position.x][position.y].waterAmount -= moveAmount
+//                    tempMap[position.x][position.y].elevation -= (moveAmount / erosionAdjust)
+//
+//                    //                    print("moved offmap... new level = ", tempMap[position.x][position.y].waterAmount)
+//                }
             }
             //            }
         }
