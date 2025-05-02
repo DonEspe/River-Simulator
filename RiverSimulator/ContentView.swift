@@ -35,7 +35,6 @@ struct ContentView: View {
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 0.01, paused: paused)) { timeline in
-
             VStack {
                 Text("River Simulator")
                     .bold()
@@ -64,13 +63,24 @@ struct ContentView: View {
                                         with: (.color(map[x][y].adjustedColor())))
                                 }
 
+//                                if drawCircle {
+//                                    context.fill(
+//                                    Path(){
+//                                        yPath in
+//                                        yPath.move(to: CGPoint(x: 200, y: 200))
+//                                        yPath.addArc(center: CGPoint(x: 200, y:200), radius: 100, startAngle: Angle(degrees: 0.0), endAngle: Angle(degrees: 360.0), clockwise: true)
+//                                    },
+//                                    with: .color(.teal))
+////                                        .stroke(Color.blue, lineWidth: 4)
+//                                }
+
                                 if showWater {
                                     context.fill(
                                         Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
                                         with: (map[x][y].waterAmount > 0 ? .color(.blue.opacity(( map[x][y].waterAmount / 3) + 0.2)) : .color(.clear)))
                                 }
 
-                                if showActive {
+                                if showActive || map[x][y].partOfCircle {
                                     context.fill(
                                         Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
                                         with: (map[x][y].active ? .color(.green.opacity(0.25)) : .color(.clear)))
@@ -87,36 +97,33 @@ struct ContentView: View {
                                     for i in (useLocation.x - radius - 2)...(useLocation.x + radius + 2) {
                                         for j in (useLocation.y - radius - 2)...(useLocation.y + radius + 2) {
                                             if ((i - useLocation.x) * (i - useLocation.x)) + ((j - useLocation.y) * (j - useLocation.y)) < radius * 2 {
-                                                if i >= 0 && i < playSize.width && j >= 0 && j < playSize.height && Double.random(in: 0...100) <= sprayLevel {
-//                                                    if changeElevation {
-//                                                        map[i][j].type = drawType
-//                                                        if nonMoving.contains(drawType) {
-//                                                            map[i][j].waterAmount = 0
-//                                                        }
-//                                                    }
-                                                    if changeElevation {//} && drawType == .sand {
-                                                        map[i][j].type = drawType
+                                                if i >= 0 && i < playSize.width && j >= 0 && j < playSize.height {
+                                                    map[i][j].partOfCircle = true
+                                                    if  Double.random(in: 0...100) <= sprayLevel {
+                                                        if changeElevation {
+                                                            map[i][j].type = drawType
 
-                                                        if nonMoving.contains(drawType) {
-                                                            map[i][j].waterAmount = 0
-                                                        }
-
-                                                        if lowerElevation {
-                                                            map[i][j].elevation -= 0.3
-                                                        } else {
-                                                            map[i][j].elevation += 0.3
-                                                        }
-                                                    } else {
-                                                        map[i][j].waterAmount += 0.1
-                                                    }
-                                                    map[i][j].active = true
-                                                    for x in (i - 1)...(i + 1) {
-                                                        for y in (j - 1)...(j + 1) {
-                                                            if x >= 0 && x < (playSize.width) && y >= 0 && y < (playSize.height) {
-                                                                map[x][y].active = true
+                                                            if nonMoving.contains(drawType) {
+                                                                map[i][j].waterAmount = 0
                                                             }
-                                                        }
-                                                    }
+
+                                                           if lowerElevation {
+                                                               map[i][j].elevation -= 0.3
+                                                           } else {
+                                                               map[i][j].elevation += 0.3
+                                                           }
+                                                       } else {
+                                                           map[i][j].waterAmount += 0.1
+                                                       }
+                                                       map[i][j].active = true
+                                                       for x in (i - 1)...(i + 1) {
+                                                           for y in (j - 1)...(j + 1) {
+                                                               if x >= 0 && x < (playSize.width) && y >= 0 && y < (playSize.height) {
+                                                                   map[x][y].active = true
+                                                               }
+                                                           }
+                                                       }
+                                                   }
                                                 }
                                             }
                                         }
@@ -124,8 +131,7 @@ struct ContentView: View {
                                 }
                             }
                             .onEnded { _ in
-                            }
-                    )
+                            })
 
                 }
                 .frame(width: CGFloat(playSize.width * scale), height: CGFloat(playSize.height * scale))
@@ -201,22 +207,24 @@ struct ContentView: View {
                         }) {
                             Text("\(lowerElevation ? "Lower":"Raise") Elevation")
                         }
-                        //                        Toggle(isOn: $lowerElevation) {
-                        //                            Text("\(lowerElevation ? "Lower":"Raise") Elevation")
                     }
-                    //                        .toggleStyle(CheckToggleStyle())
 
-                    //                    }
-                    //                    Toggle(isOn: $removeElevation) {
-                    //                        Text(removeElevation ? "Destroy ground": "Rain")
-                    //                    }
-                    //                    .toggleStyle()
                     Spacer()
                 }
-                Button("Dump water over entire map") {
-                    for i in 0..<playSize.width  {
-                        for j in 0..<playSize.height  {
-                            map[i][j].waterAmount += 0.05
+                HStack {
+                    Button("Dump water over entire map") {
+                        for i in 0..<playSize.width  {
+                            for j in 0..<playSize.height  {
+                                map[i][j].waterAmount += 0.05
+                            }
+                        }
+                    }
+                    Spacer()
+                    Button("Remove water") {
+                        for i in 0..<playSize.width  {
+                            for j in 0..<playSize.height  {
+                                map[i][j].waterAmount = 0
+                            }
                         }
                     }
                 }
@@ -232,10 +240,6 @@ struct ContentView: View {
                     }
 
                     // Smooth
-
-//                    for i in stride(from: 0, through:playSize.width - 3, by: 1)  {
-//                        for j in stride(from: 0, through:playSize.height - 3, by: 1)  {
-
                     for i in 0...playSize.width - 1 {
                         for j in 0...playSize.height - 1 {
                             var tempTotal: Double = 0.0
@@ -263,43 +267,14 @@ struct ContentView: View {
                                     }
                                 }
                             }
-
-
-//                            let upperRight = map[i+2][j].elevation
-//                            let upperLeft = map[i][j].elevation
-//                            let upperCenter = map[i+1][j].elevation
-//                            let Left = map[i][j+1].elevation
-//                            let Center = map[i+1][j+1].elevation
-//                            let Right = map[i+2][j+1].elevation
-//                            let lowerRight = map[i+2][j+2].elevation
-//                            let lowerLeft = map[i][j+2].elevation
-//                            let lowerCenter = map[i+1][j+2].elevation
-//
-//                            let average = (upperLeft + upperCenter + upperRight + Left + Center + Right + lowerLeft + lowerCenter + lowerRight) / 9.0
-//                            map[i][j].elevation = (average + map[i][j].elevation)  / 2
-//                            map[i+1][j].elevation = (average + map[i+1][j].elevation)  / 2
-//                            map[i+2][j].elevation = (average + map[i+2][j].elevation)  / 2
-//                            map[i][j+1].elevation = (average + map[i][j+1].elevation)  / 2
-//                            map[i+1][j+1].elevation = (average + map[i+1][j+1].elevation)  / 2
-//                            map[i+2][j+1].elevation = (average + map[i+2][j+1].elevation)  / 2
-//                            map[i][j+2].elevation = (average + map[i][j+2].elevation)  / 2
-//                            map[i+1][j+2].elevation = (average + map[i+1][j+2].elevation)  / 2
-//                            map[i+2][j+2].elevation = (average + map[i+2][j+2].elevation)  / 2
                         }
                     }
-
-                    //                    for (index, point) in map.enumerated() {
-                    //                        print("index: ", index)
-                    //                        map[index][index] = Particle(type: .sand, elevation: Double.random(in: -10...10))
-                    //                    }
-                    //                    map = Array(repeating: Array(repeating: Particle(type: .sand, elevation: Double.random(in: -10...10)), count: Int(playSize.height)), count: Int(playSize.width))
                 }
                 .buttonStyle(.borderedProminent)
                 .padding()
 
                 Spacer()
             }
-            //            .background(.black)
 
             .onReceive(timer, perform: { _ in
                 if paused {
@@ -324,19 +299,15 @@ struct ContentView: View {
                             map[i][j].previousDirection = nil
                         }
                         map[i][j].moved = false
+                        map[i][j].partOfCircle = false
                     }
                 }
-//                var tempMap = map
-                for i in 0..<playSize.width {
-                    for j in (0..<playSize.height).reversed() {
-//                        if map[i][j].active || nonMoving.contains(map[i][j].type)
-//                            tempMap = moveParticle(particles: tempMap, position: (x: i, y: j))
-                        map = moveParticle(particles: map, position: (x: i, y: j))
 
-//                        }
+                for i in 0..<playSize.width {
+                    for j in (0..<playSize.height) {
+                        map = moveParticle(particles: map, position: (x: i, y: j))
                     }
                 }
-//                map = tempMap
             })
         }
     }
@@ -399,43 +370,8 @@ struct ContentView: View {
         }
 
         if !neighbors.isEmpty {
-//            while !neighbors.isEmpty {
-////                print("neighbors count:, ", neighbors.count)
-//                if let location = neighbors.randomElement() {
-//                    if location.offMap {
-//                        if particle.waterAmount > 0 {
-//                            tempMap[position.x][position.y].waterAmount -= 0.1
-//                        }
-//                    } else {
-//                        if ((location.waterLevel + location.elevation) < (particle.elevation + particle.waterAmount)) { //&& (particle.waterAmount > 0)  { // && !location.offMap {
-//                            if tempMap[position.x][position.y].waterAmount > 0 {
-//                                tempMap[position.x][position.y].waterAmount -= 0.2
-//                                tempMap[location.x][location.y].waterAmount += 0.2
-//                                tempMap[location.x][location.y].elevation += 0.175
-//                                tempMap[position.x][position.y].elevation -= 0.175
-//                            }
-//                        }
-//                    }
-//                    neighbors.removeAll(where: { $0.id == location.id })
-//                }
-//            }
-
             neighbors.shuffle()
             if let inertialLocation = neighbors.first(where: {$0.direction == particle.previousDirection}) {
-
-//                if (particle.previousDirection == .down || particle.previousDirection == .left)  { //&& Int.random(in: 0...100) > 70 {
-//                    neighbors.removeAll(where: { $0.id == inertialLocation.id })
-//                }
-//
-//                if (particle.previousDirection == .down || particle.previousDirection == .left)  { //&& Int.random(in: 0...100) > 70 {
-//                    neighbors.removeAll(where: { $0.id == inertialLocation.id })
-//                }
-//
-//                if particle.previousDirection != .up || Int.random(in: 0...100) > 70 || particle.previousDirection != .left {
-//                    neighbors.removeAll(where: { $0.id == inertialLocation.id })
-//                    neighbors.insert(inertialLocation, at: 0)
-//                }
-
                 neighbors.removeAll(where: { $0.id == inertialLocation.id })
                 neighbors.insert(inertialLocation, at: 0)
             }
@@ -452,11 +388,10 @@ struct ContentView: View {
             }
 
             for location in neighbors {
-                //                if (location.direction != .down && location.direction != .left) || Int.random(in: 0...100) > 25 {
                 let endElevation = (tempMap[location.x][location.y].waterAmount + tempMap[location.x][location.y].elevation)
                 let startElevation = (tempMap[position.x][position.y].elevation + tempMap[position.x][position.y].waterAmount)
                 let difference = endElevation - startElevation
-                if difference < 0 {//} || location.offMap { //}&& !location.offMap {
+                if difference < 0 {
                     if tempMap[position.x][position.y].waterAmount > 0 {
                         let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount, abs(difference))
                         tempMap[position.x][position.y].previousDirection = location.direction
@@ -471,54 +406,13 @@ struct ContentView: View {
                         tempMap[location.x][location.y].moved = true
                     }
                 }
-
-//                if location.offMap && tempMap[position.x][position.y].waterAmount > 0 {
-//                    let moveAmount = min(0.2, tempMap[position.x][position.y].waterAmount)
-//                    tempMap[position.x][position.y].previousDirection = location.direction
-//                    tempMap[position.x][position.y].waterAmount -= moveAmount
-//                    tempMap[position.x][position.y].elevation -= (moveAmount / erosionAdjust)
-//
-//                    //                    print("moved offmap... new level = ", tempMap[position.x][position.y].waterAmount)
-//                }
             }
-            //            }
         }
-
-
-//        if !neighbors.isEmpty {
-//            for i in (position.x - 1)...(position.x + 1) {
-//                for j in (position.y - 1)...(position.y + 1) {
-//                    if i >= 0 && i < (playSize.width) && j >= 0 && j < (playSize.height) {
-//                        tempMap[i][j].active = true
-//                    }
-//                }
-//            }
-//        } else {
-//            tempMap[position.x][position.y].active = false
-//            return tempMap
-//        }
 
         return tempMap
     }
-
 }
 
-
-//struct Raindrop: Hashable, Equatable {
-//    var x: Double
-//    var removalDate: Date
-//    var speed: Double
-//}
-//
-//class Storm: ObservableObject {
-//    var drops = Set<Raindrop>()
-//
-//    func update(to date: Date) {
-//        drops = drops.filter { $0.removalDate > date }
-//        drops.insert(Raindrop(x: Double.random(in: 0...1), removalDate: date + 1, speed: Double.random(in: 1...2)))
-//    }
-//}
-
-//#Preview {
-//    ContentView()
-//}
+#Preview {
+    ContentView()
+}

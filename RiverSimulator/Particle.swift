@@ -38,7 +38,9 @@ struct Particle: Identifiable {
             }
         }
     }
-    
+
+    var partOfCircle = false
+
     var waterAmount = 0.0 {
         didSet {
             if waterAmount < 0 {
