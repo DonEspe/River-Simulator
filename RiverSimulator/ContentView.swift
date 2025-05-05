@@ -28,7 +28,6 @@ struct ContentView: View {
     @State var totalWater = 0.0
 
     let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
-    //    @StateObject private var storm = Storm()
 
     @State var paused = false
     let rainColor = Color(red: 0.25, green: 0.5, blue: 0.75)
@@ -62,17 +61,6 @@ struct ContentView: View {
                                         Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
                                         with: (.color(map[x][y].adjustedColor())))
                                 }
-
-//                                if drawCircle {
-//                                    context.fill(
-//                                    Path(){
-//                                        yPath in
-//                                        yPath.move(to: CGPoint(x: 200, y: 200))
-//                                        yPath.addArc(center: CGPoint(x: 200, y:200), radius: 100, startAngle: Angle(degrees: 0.0), endAngle: Angle(degrees: 360.0), clockwise: true)
-//                                    },
-//                                    with: .color(.teal))
-////                                        .stroke(Color.blue, lineWidth: 4)
-//                                }
 
                                 if showWater {
                                     context.fill(
